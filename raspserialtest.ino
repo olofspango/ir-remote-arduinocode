@@ -1,4 +1,10 @@
-#include <IRLib.h>
+#include <IRLibSendBase.h>    // First include the send base
+//Now include only the protocols you wish to actually use.
+//The lowest numbered protocol should be first but remainder 
+//can be any order.
+#include <IRLib_P01_NEC.h>    
+#include <IRLibCombo.h>     // After all protocols, include this
+
 
 IRsend irsend;
 bool repeat = false;
@@ -9,11 +15,17 @@ void setup(){
  
 void loop(){
     if(repeat) {
+      Serial.println("repeating");
       irsend.send(NEC, 0xFFFFFFFF, 32);
     }
     if (Serial.available()) {
         byte buffer[5];
         Serial.readBytes(buffer, 5);
+        Serial.println(buffer[0]);
+        Serial.println(buffer[1]);
+        Serial.println(buffer[2]);
+        Serial.println(buffer[3]);
+        Serial.println(buffer[4]);
         byte command = buffer[0];
         
         byte ircode[4];
@@ -21,23 +33,17 @@ void loop(){
           ircode[i-1] = buffer[i]; 
         }
         
-        if(command == 0) {
+        if(command == 2) {
+          repeat = false;
           Serial.println("Not repeating");
+          return;
         } else if (command == 1) {
           repeat = true;
         }
-                
-        unsigned long myInt = array_to_int(ircode, 4);
-        int repeat = 1;
-        if(myInt == 0xFFFFFFFF) {
-          repeat = 10;
-        }
-        for (int i = 0; i < repeat; i++) {
-          irsend.send(NEC, myInt, 32);
-          Serial.println(myInt);
-          delay(40);
-
-        }
+        unsigned long myInt = array_to_int(ircode, 4); // convert the 4 bytes to one nice big value
+        
+        irsend.send(NEC, myInt, 32);
+        Serial.println(myInt); // emitting this value!
 
         char str[32] = "";
         array_to_string(ircode, 4, str);
