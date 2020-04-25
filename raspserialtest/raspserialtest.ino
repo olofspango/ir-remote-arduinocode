@@ -41,10 +41,12 @@ void loop(){
           repeat = true;
         }
         unsigned long myInt = array_to_int(ircode, 4); // convert the 4 bytes to one nice big value
-        
+        if(command == 3) { // Send Sony signal
+          irsend.send(SONY, myInt, 12);
+        } else {
         irsend.send(NEC, myInt, 32);
+        }
         Serial.println(myInt); // emitting this value!
-
         char str[32] = "";
         array_to_string(ircode, 4, str);
         Serial.print("Sending");
