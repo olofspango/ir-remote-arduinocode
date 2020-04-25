@@ -3,6 +3,7 @@
 //The lowest numbered protocol should be first but remainder 
 //can be any order.
 #include <IRLib_P01_NEC.h>    
+#inclue <IRLib_P02_Sony.h>
 #include <IRLibCombo.h>     // After all protocols, include this
 
 
