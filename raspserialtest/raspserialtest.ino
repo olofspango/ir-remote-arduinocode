@@ -3,12 +3,15 @@
 //The lowest numbered protocol should be first but remainder 
 //can be any order.
 #include <IRLib_P01_NEC.h>    
-#inclue <IRLib_P02_Sony.h>
+#include <IRLib_P02_Sony.h>
 #include <IRLibCombo.h>     // After all protocols, include this
 
 
 IRsend irsend;
 bool repeat = false;
+int numberOfBitsMask = 248;
+int commandMask = 7;
+
 
 void setup(){
     Serial.begin(9600);    
@@ -19,7 +22,7 @@ void loop(){
       Serial.println("repeating");
       irsend.send(NEC, 0xFFFFFFFF, 32);
     }
-    if (Serial.available()) {
+    if (Serial.available()) {      
         byte buffer[5];
         Serial.readBytes(buffer, 5);
         Serial.println(buffer[0]);
@@ -27,8 +30,11 @@ void loop(){
         Serial.println(buffer[2]);
         Serial.println(buffer[3]);
         Serial.println(buffer[4]);
-        byte command = buffer[0];
-        
+        byte commandingByte = buffer[0];
+
+        int numberOfBits = (((int) commandingByte) & numberOfBitsMask) >> 3; // First 5 bits of the commandingByte refer to number of sony-bits to send
+        int command = ((int) commandingByte) & commandMask; // remaining 3 bits of commandingByte refer to command (0 send, 1 repeat, 2 stop repeat, 3 sony-signal)
+
         byte ircode[4];
         for(int i=1; i < 5; i++) {
           ircode[i-1] = buffer[i]; 
@@ -43,7 +49,7 @@ void loop(){
         }
         unsigned long myInt = array_to_int(ircode, 4); // convert the 4 bytes to one nice big value
         if(command == 3) { // Send Sony signal
-          irsend.send(SONY, myInt, 12);
+          irsend.send(SONY, myInt, numberOfBits);
         } else {
         irsend.send(NEC, myInt, 32);
         }
